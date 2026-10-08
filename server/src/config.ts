@@ -26,5 +26,6 @@ export const config = {
   dbPath: path.resolve(serverRoot, process.env.DB_PATH || 'data/grace.db'),
   crisisContacts:
     process.env.CRISIS_CONTACTS || 'your local emergency services or the nearest hospital',
+  adminPassword: process.env.ADMIN_PASSWORD ?? '',
   historyLimit: 20,
 };

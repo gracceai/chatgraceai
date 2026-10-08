@@ -31,6 +31,90 @@ function headers(extra: Record<string, string> = {}) {
   return { 'X-Session-Id': sessionId(), ...extra };
 }
 
+export interface Suggestion {
+  label: string;
+  message: string;
+}
+
+export interface SiteConfig {
+  defaultCompanion: string;
+  suggestions: Suggestion[];
+  sounds: Record<string, Record<string, string>>;
+}
+
+export interface AdminSettings {
+  crisisContacts: string;
+  defaultCompanion: string;
+  suggestions: Suggestion[];
+  promptTemplate: string;
+  defaultPromptTemplate: string;
+  sounds: { companion: string; event: string; updatedAt: number }[];
+}
+
+export async function fetchSiteConfig(): Promise<SiteConfig> {
+  const res = await fetch('/api/site-config');
+  if (!res.ok) throw new Error('Could not load site settings');
+  return res.json();
+}
+
+async function adminRequest(path: string, init: RequestInit = {}): Promise<Response> {
+  const res = await fetch(`/api/admin${path}`, init);
+  if (!res.ok && res.status !== 401) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? 'Something went wrong. Please try again.');
+  }
+  return res;
+}
+
+export async function adminLogin(password: string): Promise<void> {
+  const res = await adminRequest('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (res.status === 401) throw new Error('Incorrect password');
+}
+
+export async function adminLogout(): Promise<void> {
+  await adminRequest('/logout', { method: 'POST' });
+}
+
+export async function fetchAdminSettings(): Promise<AdminSettings | null> {
+  const res = await adminRequest('/settings');
+  return res.status === 401 ? null : res.json();
+}
+
+export async function saveAdminSettings(
+  settings: Partial<Omit<AdminSettings, 'promptTemplate' | 'defaultPromptTemplate' | 'sounds'>> & {
+    promptTemplate?: string | null;
+  },
+): Promise<void> {
+  await adminRequest('/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+}
+
+export async function uploadSound(companion: string, event: string, file: File): Promise<void> {
+  await adminRequest(`/sounds/${companion}/${event}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type.startsWith('audio/') ? file.type : 'audio/mpeg' },
+    body: file,
+  });
+}
+
+export async function removeSound(companion: string, event: string): Promise<void> {
+  await adminRequest(`/sounds/${companion}/${event}`, { method: 'DELETE' });
+}
+
+export async function fetchCrisisContacts(): Promise<string> {
+  const res = await fetch('/api/crisis-contacts');
+  if (!res.ok) throw new Error('Could not load help contacts');
+  const body: { contacts: string } = await res.json();
+  return body.contacts;
+}
+
 export async function fetchConversations(): Promise<Conversation[]> {
   const res = await fetch('/api/conversations', { headers: headers() });
   if (!res.ok) throw new Error('Could not load conversations');

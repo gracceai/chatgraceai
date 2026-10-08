@@ -1,8 +1,11 @@
 import type { Conversation } from '../lib/api';
+import Avatar, { AVATARS, type AvatarVariant } from './Avatar';
 
 interface Props {
   conversations: Conversation[];
   activeId: string | null;
+  avatar: AvatarVariant;
+  onAvatarChange: (avatar: AvatarVariant) => void;
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
@@ -13,6 +16,8 @@ interface Props {
 export default function Sidebar({
   conversations,
   activeId,
+  avatar,
+  onAvatarChange,
   open,
   onClose,
   onNewChat,
@@ -34,13 +39,8 @@ export default function Sidebar({
         }`}
       >
         <div className="flex h-[72px] shrink-0 items-center gap-2.5 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <svg viewBox="0 0 64 64" className="h-6 w-6">
-              <path
-                d="M32 46s-14-8.2-14-18.2C18 22.4 22 19 26.2 19c2.6 0 4.6 1.3 5.8 3.2 1.2-1.9 3.2-3.2 5.8-3.2C42 19 46 22.4 46 27.8 46 37.8 32 46 32 46z"
-                fill="#c4eae3"
-              />
-            </svg>
+          <div className="flex w-10 shrink-0 justify-center">
+            <Avatar variant={avatar} size="sm" />
           </div>
           <span className="font-display text-xl font-bold tracking-[-0.03em] text-primary">GraceAI</span>
           <button
@@ -92,7 +92,7 @@ export default function Sidebar({
                     onClick={() => {
                       if (confirm('Delete this conversation?')) onDelete(conversation.id);
                     }}
-                    className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-ink-soft/65 opacity-100 transition hover:bg-white hover:text-red-600 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-ink-soft/65 opacity-100 transition hover:bg-white hover:text-clay-ink focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                     aria-label={`Delete conversation ${conversation.title}`}
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -105,8 +105,31 @@ export default function Sidebar({
           )}
         </nav>
 
-        <div className="mx-5 mb-5 flex items-start gap-2.5 border-t border-outline/40 pt-4 text-xs leading-relaxed text-ink-soft">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-mint-strong">
+        <div className="mx-5 mb-4 border-t border-outline/40 pt-4">
+          <p id="companion-label" className="mb-2 text-xs font-medium text-ink-soft/70">Companion</p>
+          <div role="radiogroup" aria-labelledby="companion-label" className="flex gap-2">
+            {AVATARS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={option.id === avatar}
+                aria-label={option.label}
+                onClick={() => onAvatarChange(option.id)}
+                className={`flex h-12 flex-1 items-center justify-center rounded-xl border transition ${
+                  option.id === avatar
+                    ? 'border-primary-tint bg-primary-soft/70'
+                    : 'border-outline/50 hover:bg-surface-low'
+                }`}
+              >
+                <Avatar variant={option.id} size="sm" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mx-5 mb-5 flex items-start gap-2.5 text-xs leading-relaxed text-ink-soft">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-primary">
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

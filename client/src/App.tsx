@@ -1,22 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Avatar, { isAvatarVariant, type AvatarVariant } from './components/Avatar';
 import ChatMessage from './components/ChatMessage';
 import Composer from './components/Composer';
+import HelpDialog from './components/HelpDialog';
 import Sidebar from './components/Sidebar';
 import {
   fetchConversations,
   fetchMessages,
+  fetchSiteConfig,
   removeConversation,
   sendMessage,
   type Conversation,
   type Message,
+  type Suggestion,
 } from './lib/api';
+import {
+  playReply,
+  playSend,
+  setRecordedSources,
+  setSoundEnabled,
+  soundEnabled,
+  startThinking,
+  stopThinking,
+} from './lib/sound';
 
-const SUGGESTIONS = [
-  { label: 'Ease anxious thoughts', message: "I've been feeling anxious lately" },
-  { label: 'Improve my sleep', message: "I can't seem to sleep well" },
-  { label: 'Manage work stress', message: 'Work stress is overwhelming me' },
-  { label: 'Talk things through', message: 'I just need someone to talk to' },
-];
+const AVATAR_KEY = 'graceai.avatar';
 
 export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -25,6 +33,12 @@ export default function App() {
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [avatar, setAvatar] = useState<AvatarVariant>(() => {
+    const stored = localStorage.getItem(AVATAR_KEY);
+    return isAvatarVariant(stored) ? stored : 'pebble';
+  });
+  const [soundOn, setSoundOn] = useState(soundEnabled);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +49,18 @@ export default function App() {
   }, []);
 
   useEffect(refreshConversations, [refreshConversations]);
+
+  useEffect(() => {
+    fetchSiteConfig()
+      .then((siteConfig) => {
+        setSuggestions(siteConfig.suggestions);
+        setRecordedSources(siteConfig.sounds);
+        if (localStorage.getItem(AVATAR_KEY) === null && isAvatarVariant(siteConfig.defaultCompanion)) {
+          setAvatar(siteConfig.defaultCompanion);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: streaming ? 'auto' : 'smooth', block: 'end' });
@@ -72,6 +98,9 @@ export default function App() {
     if (streaming) return;
     setError(null);
     setStreaming(true);
+    playSend(avatar);
+    startThinking(avatar);
+    let firstToken = true;
 
     const pendingId = `pending-${Date.now()}`;
     setMessages((prev) => [
@@ -89,10 +118,16 @@ export default function App() {
         activeId,
         {
           onConversation: (id) => setActiveId(id),
-          onToken: (token) =>
+          onToken: (token) => {
+            if (firstToken) {
+              firstToken = false;
+              stopThinking();
+              playReply(avatar);
+            }
             setMessages((prev) =>
               prev.map((m) => (m.id === pendingId ? { ...m, content: m.content + token } : m)),
-            ),
+            );
+          },
         },
         controller.signal,
       );
@@ -101,6 +136,7 @@ export default function App() {
         setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       }
     } finally {
+      stopThinking();
       setMessages((prev) => prev.filter((m) => m.id !== pendingId || m.content));
       setStreaming(false);
       abortRef.current = null;
@@ -110,6 +146,17 @@ export default function App() {
 
   const stop = () => abortRef.current?.abort();
 
+  const toggleSound = () => {
+    setSoundEnabled(!soundOn, avatar);
+    setSoundOn(!soundOn);
+  };
+
+  const chooseAvatar =(next: AvatarVariant) => {
+    localStorage.setItem(AVATAR_KEY, next);
+    setAvatar(next);
+    playReply(next);
+  };
+
   const isEmpty = messages.length === 0;
 
   return (
@@ -117,6 +164,8 @@ export default function App() {
       <Sidebar
         conversations={conversations}
         activeId={activeId}
+        avatar={avatar}
+        onAvatarChange={chooseAvatar}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNewChat={startNewChat}
@@ -136,16 +185,29 @@ export default function App() {
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
             </svg>
           </button>
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-base font-bold text-mint">
-            G
+          <div className="flex w-10 shrink-0 justify-center">
+            <Avatar variant={avatar} size="sm" />
           </div>
           <div className="min-w-0">
             <h1 className="truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink sm:text-base">Grace Companion</h1>
-            <p className="flex items-center gap-1.5 text-xs text-mint-strong">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <p className="flex items-center gap-1.5 text-xs text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-sage" />
               Online
             </p>
           </div>
+          <HelpDialog avatar={avatar} />
+          <button
+            type="button"
+            onClick={toggleSound}
+            aria-pressed={soundOn}
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition hover:bg-primary-soft/60 hover:text-primary"
+            aria-label={soundOn ? 'Turn sound off' : 'Turn sound on'}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5 6 9H3v6h3l5 4z" />
+              {soundOn ? <path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" /> : <path d="m16 9 5 6M21 9l-5 6" />}
+            </svg>
+          </button>
         </header>
 
         <div className="grace-scrollbar min-h-0 flex-1 overscroll-contain overflow-y-auto">
@@ -153,9 +215,7 @@ export default function App() {
             {isEmpty ? (
               <div className="flex w-full flex-col items-center text-center">
                 <div className="mb-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-2xl font-bold text-mint">
-                    G
-                  </div>
+                  <Avatar variant={avatar} size="lg" />
                 </div>
                 <h2 className="font-display text-3xl font-bold tracking-[-0.035em] text-primary-strong md:text-4xl">
                   Hello, I&apos;m Grace.
@@ -165,7 +225,7 @@ export default function App() {
                   feeling today?
                 </p>
                 <div className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2">
-                  {SUGGESTIONS.map((suggestion) => (
+                  {suggestions.map((suggestion) => (
                     <button
                       key={suggestion.message}
                       type="button"
@@ -183,6 +243,7 @@ export default function App() {
                 <ChatMessage
                   key={message.id}
                   message={message}
+                  avatar={avatar}
                   typing={streaming && message.role === 'assistant' && !message.content}
                 />
               ))
@@ -191,7 +252,7 @@ export default function App() {
             {error && (
               <div
                 role="alert"
-                className="rounded-2xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm"
+                className="rounded-2xl border border-clay/40 bg-clay-soft px-4 py-3 text-sm text-clay-ink"
               >
                 {error}
               </div>

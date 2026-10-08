@@ -42,4 +42,18 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_messages_conversation
     ON messages (conversation_id, id);
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS sounds (
+    companion TEXT NOT NULL,
+    event TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    data BLOB NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (companion, event)
+  );
 `);

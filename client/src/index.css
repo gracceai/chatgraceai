@@ -1,21 +1,25 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, sans-serif;
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Nunito', ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary: #48277a;
-  --color-primary-strong: #270057;
-  --color-primary-soft: #ecdcff;
-  --color-primary-tint: #6e4da1;
-  --color-mint: #c4eae3;
-  --color-mint-strong: #486b66;
-  --color-surface: #f8f9ff;
-  --color-surface-low: #eff4ff;
-  --color-surface-mid: #e5eeff;
-  --color-ink: #0b1c30;
-  --color-ink-soft: #4a4550;
-  --color-outline: #ccc3d2;
+  --color-white: #fffdf8;
+  --color-primary: #5f7a61;
+  --color-primary-strong: #3f5443;
+  --color-primary-soft: #dfe8da;
+  --color-primary-tint: #6b866d;
+  --color-sage: #8fa68e;
+  --color-sage-light: #cfe0cb;
+  --color-clay: #c9826b;
+  --color-clay-soft: #f1ddd3;
+  --color-clay-ink: #6b3f30;
+  --color-surface: #fffdf8;
+  --color-surface-low: #f6f1e7;
+  --color-surface-mid: #ece4d4;
+  --color-ink: #2f3a33;
+  --color-ink-soft: #5d6a61;
+  --color-outline: #d9cfba;
 }
 
 * {
@@ -29,7 +33,7 @@ body,
 }
 
 html {
-  background: #eff4ff;
+  background: #f6f1e7;
 }
 
 body {
@@ -50,23 +54,22 @@ button {
 }
 
 button:focus-visible,
-textarea:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgb(110 77 161 / 0.22);
+  outline: 3px solid rgb(95 122 97 / 0.3);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: #d6baff;
-  color: #270057;
+  background: #cfe0cb;
+  color: #3f5443;
 }
 
 .app-shell {
-  background: #f8f9ff;
+  background: #fffdf8;
 }
 
 .grace-scrollbar {
-  scrollbar-color: rgb(110 77 161 / 0.25) transparent;
+  scrollbar-color: rgb(95 122 97 / 0.3) transparent;
   scrollbar-width: thin;
 }
 
@@ -75,7 +78,7 @@ a:focus-visible {
 }
 
 .grace-scrollbar::-webkit-scrollbar-thumb {
-  background: rgb(110 77 161 / 0.22);
+  background: rgb(95 122 97 / 0.28);
   border-radius: 999px;
 }
 
@@ -87,7 +90,9 @@ a:focus-visible {
 .prose-grace p + ul,
 .prose-grace p + ol,
 .prose-grace ul + p,
-.prose-grace ol + p {
+.prose-grace ol + p,
+.prose-grace ul + ol,
+.prose-grace ol + ul {
   margin-top: 0.6rem;
 }
 .prose-grace ul {
@@ -106,8 +111,232 @@ a:focus-visible {
 }
 .prose-grace a {
   text-decoration: underline;
-  text-decoration-color: rgb(110 77 161 / 0.45);
+  text-decoration-color: rgb(95 122 97 / 0.5);
   text-underline-offset: 3px;
+}
+
+.msg-rise {
+  animation: msg-rise 900ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.avatar {
+  display: block;
+  flex: none;
+}
+
+.avatar-orb {
+  border-radius: 9999px;
+  background: radial-gradient(circle at 38% 34%, var(--color-sage-light), var(--color-sage) 62%, var(--color-primary));
+  animation: avatar-breathe 10s ease-in-out infinite;
+}
+.avatar-orb.avatar-sm {
+  width: 34px;
+  height: 34px;
+}
+.avatar-orb.avatar-lg {
+  width: 76px;
+  height: 76px;
+}
+
+.avatar-sprout.avatar-sm {
+  width: 34px;
+  height: 34px;
+}
+.avatar-sprout.avatar-lg {
+  width: 76px;
+  height: 76px;
+}
+.avatar-stem {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.avatar-leaf {
+  transform-origin: 38px 62px;
+  animation: avatar-sway 10s ease-in-out infinite;
+}
+.avatar-leaf-a {
+  fill: var(--color-sage);
+}
+.avatar-leaf-b {
+  fill: var(--color-sage-light);
+  animation-delay: -1.2s;
+}
+
+.avatar-pebble {
+  position: relative;
+  border-radius: 50% 50% 46% 54% / 58% 56% 44% 42%;
+  background: var(--color-surface-mid);
+  border: 1px solid var(--color-outline);
+  animation: avatar-settle 10s ease-in-out infinite;
+}
+.avatar-pebble::before,
+.avatar-pebble::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--color-ink);
+  animation: avatar-blink 6s infinite;
+}
+.avatar-pebble.avatar-sm {
+  width: 40px;
+  height: 30px;
+}
+.avatar-pebble.avatar-sm::before,
+.avatar-pebble.avatar-sm::after {
+  top: 12px;
+  width: 4px;
+  height: 4px;
+}
+.avatar-pebble.avatar-sm::before {
+  left: 13px;
+}
+.avatar-pebble.avatar-sm::after {
+  right: 13px;
+}
+.avatar-pebble.avatar-lg {
+  width: 84px;
+  height: 62px;
+}
+.avatar-pebble.avatar-lg::before,
+.avatar-pebble.avatar-lg::after {
+  top: 24px;
+  width: 7px;
+  height: 7px;
+}
+.avatar-pebble.avatar-lg::before {
+  left: 27px;
+}
+.avatar-pebble.avatar-lg::after {
+  right: 27px;
+}
+
+.typing {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+}
+.typing i {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+}
+.typing i:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.typing i:nth-child(3) {
+  animation-delay: 0.6s;
+}
+.typing-wave i {
+  animation: typing-wave 2.4s ease-in-out infinite;
+}
+.typing-glow i {
+  width: 12px;
+  height: 12px;
+  background: var(--color-sage);
+  animation: typing-glow 2.8s ease-in-out infinite;
+}
+.typing-ripple {
+  width: 40px;
+  justify-content: center;
+}
+.typing-ripple i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -5px;
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border: 2px solid var(--color-primary);
+  opacity: 0;
+  animation: typing-ripple 3s ease-out infinite;
+}
+.typing-ripple i:nth-child(2) {
+  animation-delay: 1s;
+}
+.typing-ripple i:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes msg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes avatar-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+@keyframes avatar-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg) scale(0.96);
+  }
+  50% {
+    transform: rotate(3deg) scale(1.05);
+  }
+}
+@keyframes avatar-settle {
+  0%,
+  100% {
+    transform: scale(0.97, 1.02);
+  }
+  50% {
+    transform: scale(1.03, 0.98);
+  }
+}
+@keyframes avatar-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes typing-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.9;
+  }
+}
+@keyframes typing-glow {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+@keyframes typing-ripple {
+  from {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(3.4);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import { adminRouter } from './admin.js';
 import { config } from './config.js';
 import {
   addMessage,
@@ -13,12 +14,21 @@ import { db } from './db.js';
 import { createSqliteKeyStore, insertKey } from './keyStore.js';
 import { NoKeysAvailableError, streamChatWithFailover, type ChatMessage } from './ollama.js';
 import { buildSystemPrompt } from './prompt.js';
+import {
+  getCrisisContacts,
+  getDefaultCompanion,
+  getPromptTemplate,
+  getSound,
+  getSuggestions,
+  isCompanion,
+  isSoundEvent,
+  listSounds,
+} from './siteSettings.js';
 
 const MAX_MESSAGE_LENGTH = 4000;
 const SESSION_ID_PATTERN = /^[a-zA-Z0-9-]{16,64}$/;
 
 const keyStore = createSqliteKeyStore(db);
-const systemPrompt = buildSystemPrompt(config.crisisContacts);
 
 config.envApiKeys.forEach((apiKey, index) => {
   if (insertKey(db, { label: `env-${index + 1}`, apiKey, priority: 100 + index })) {
@@ -40,6 +50,33 @@ function sessionIdOf(req: Request, res: Response): string | null {
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, keysAvailable: keyStore.availableKeys(Date.now()).length });
+});
+
+app.use('/api/admin', adminRouter());
+
+app.get('/api/crisis-contacts', (_req, res) => {
+  res.json({ contacts: getCrisisContacts() });
+});
+
+app.get('/api/site-config', (_req, res) => {
+  const sounds: Record<string, Record<string, string>> = {};
+  for (const { companion, event, updatedAt } of listSounds()) {
+    sounds[companion] = { ...sounds[companion], [event]: `/api/sounds/${companion}/${event}?v=${updatedAt}` };
+  }
+  res.json({ defaultCompanion: getDefaultCompanion(), suggestions: getSuggestions(), sounds });
+});
+
+app.get('/api/sounds/:companion/:event', (req, res) => {
+  const { companion, event } = req.params;
+  const sound = isCompanion(companion) && isSoundEvent(event) ? getSound(companion, event) : undefined;
+  if (!sound) {
+    res.status(404).json({ error: 'Sound not found' });
+    return;
+  }
+  res.setHeader('Content-Type', sound.mime);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.end(sound.data);
 });
 
 app.get('/api/conversations', (req, res) => {
@@ -91,7 +128,7 @@ app.post('/api/chat', async (req, res) => {
   addMessage(conversationId, 'user', message);
 
   const history: ChatMessage[] = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: buildSystemPrompt(getCrisisContacts(), getPromptTemplate()) },
     ...getRecentMessages(conversationId, config.historyLimit),
   ];
 

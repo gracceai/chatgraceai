@@ -12,10 +12,10 @@ import {
 } from './lib/api';
 
 const SUGGESTIONS = [
-  "I've been feeling anxious lately",
-  "I can't seem to sleep well",
-  'Work stress is overwhelming me',
-  'I just need someone to talk to',
+  { label: 'Ease anxious thoughts', message: "I've been feeling anxious lately" },
+  { label: 'Improve my sleep', message: "I can't seem to sleep well" },
+  { label: 'Manage work stress', message: 'Work stress is overwhelming me' },
+  { label: 'Talk things through', message: 'I just need someone to talk to' },
 ];
 
 export default function App() {
@@ -37,8 +37,8 @@ export default function App() {
   useEffect(refreshConversations, [refreshConversations]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: streaming ? 'auto' : 'smooth', block: 'end' });
+  }, [messages, streaming]);
 
   const startNewChat = () => {
     abortRef.current?.abort();
@@ -113,7 +113,7 @@ export default function App() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-surface-low">
       <Sidebar
         conversations={conversations}
         activeId={activeId}
@@ -124,53 +124,56 @@ export default function App() {
         onDelete={deleteConversation}
       />
 
-      <main className="flex min-w-0 flex-1 flex-col bg-surface-low">
-        <header className="flex items-center gap-3 border-b border-outline/50 bg-white/80 px-4 py-3 backdrop-blur md:px-6">
+      <main className="app-shell flex min-w-0 flex-1 flex-col">
+        <header className="z-10 flex h-[72px] shrink-0 items-center gap-3 border-b border-outline/35 bg-white px-4 md:px-7">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-ink-soft hover:bg-surface-mid md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition hover:bg-primary-soft/60 hover:text-primary md:hidden"
             aria-label="Open conversations"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
             </svg>
           </button>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-mint">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-base font-bold text-mint">
             G
           </div>
-          <div>
-            <h1 className="font-display text-base font-semibold text-ink">Grace Companion</h1>
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-[15px] font-bold tracking-[-0.01em] text-ink sm:text-base">Grace Companion</h1>
             <p className="flex items-center gap-1.5 text-xs text-mint-strong">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Online
             </p>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 md:px-6">
+        <div className="grace-scrollbar min-h-0 flex-1 overscroll-contain overflow-y-auto">
+          <div className={`mx-auto flex min-h-full max-w-3xl flex-col px-4 md:px-6 ${isEmpty ? 'justify-center py-8' : 'gap-5 py-7 md:py-10'}`}>
             {isEmpty ? (
-              <div className="flex flex-col items-center pt-10 text-center md:pt-20">
-                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-3xl font-bold text-mint shadow-lg shadow-primary/20">
-                  G
+              <div className="flex w-full flex-col items-center text-center">
+                <div className="mb-6">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary font-display text-2xl font-bold text-mint">
+                    G
+                  </div>
                 </div>
-                <h2 className="font-display text-2xl font-bold text-primary-strong md:text-3xl">
+                <h2 className="font-display text-3xl font-bold tracking-[-0.035em] text-primary-strong md:text-4xl">
                   Hello, I&apos;m Grace.
                 </h2>
-                <p className="mt-3 max-w-md text-ink-soft">
+                <p className="mt-3 max-w-lg text-[15px] leading-7 text-ink-soft md:text-base">
                   I&apos;m here to listen, without judgment, whenever you need. How are you
                   feeling today?
                 </p>
-                <div className="mt-8 grid w-full max-w-lg gap-2 sm:grid-cols-2">
+                <div className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2">
                   {SUGGESTIONS.map((suggestion) => (
                     <button
-                      key={suggestion}
+                      key={suggestion.message}
                       type="button"
-                      onClick={() => send(suggestion)}
-                      className="rounded-xl border border-outline/60 bg-white px-4 py-3 text-left text-sm text-ink transition hover:border-primary-tint hover:bg-primary-soft/40"
+                      onClick={() => send(suggestion.message)}
+                      className="group flex min-h-14 items-center justify-between gap-3 rounded-xl border border-outline/50 bg-white px-4 py-3 text-left text-sm text-ink transition hover:border-primary-tint"
                     >
-                      {suggestion}
+                      <span className="font-medium text-primary-strong">{suggestion.label}</span>
+                      <span className="text-ink-soft/50 transition group-hover:translate-x-0.5 group-hover:text-primary">→</span>
                     </button>
                   ))}
                 </div>
@@ -188,7 +191,7 @@ export default function App() {
             {error && (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+                className="rounded-2xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm"
               >
                 {error}
               </div>

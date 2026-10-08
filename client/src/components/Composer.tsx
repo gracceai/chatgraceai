@@ -35,8 +35,11 @@ export default function Composer({ streaming, onSend, onStop }: Props) {
   };
 
   return (
-    <div className="border-t border-outline/50 bg-white px-4 pb-4 pt-3 md:px-6">
-      <form onSubmit={submit} className="mx-auto flex max-w-3xl items-end gap-2">
+    <div className="z-10 shrink-0 border-t border-outline/30 bg-white px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 md:px-7 md:pb-4">
+      <form
+        onSubmit={submit}
+        className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-outline/60 bg-surface p-1.5 transition focus-within:border-primary-tint"
+      >
         <textarea
           ref={textareaRef}
           value={text}
@@ -44,24 +47,24 @@ export default function Composer({ streaming, onSend, onStop }: Props) {
           onKeyDown={onKeyDown}
           rows={1}
           maxLength={MAX_LENGTH}
-          placeholder="Message Grace..."
+          placeholder="Share what’s on your mind..."
           aria-label="Message Grace"
-          className="flex-1 resize-none rounded-2xl border border-outline/70 bg-surface px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-primary-tint focus:ring-2 focus:ring-primary-soft"
+          className="max-h-[200px] min-h-11 flex-1 resize-none bg-transparent px-3 py-3 text-[15px] leading-5 text-ink outline-none placeholder:text-ink-soft/50"
         />
         {streaming ? (
           <button
             type="button"
             onClick={onStop}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary transition hover:bg-primary-soft/70"
+            className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary transition hover:bg-primary-soft/70"
             aria-label="Stop Grace's reply"
           >
-            <span className="h-3.5 w-3.5 rounded-sm bg-primary" />
+            <span className="h-3 w-3 rounded-[3px] bg-primary" />
           </button>
         ) : (
           <button
             type="submit"
             disabled={!text.trim()}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-40"
+            className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Send message"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
@@ -70,9 +73,9 @@ export default function Composer({ streaming, onSend, onStop }: Props) {
           </button>
         )}
       </form>
-      <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-ink-soft/80">
-        Grace is an AI companion, not a replacement for professional care. If you are in danger,
-        contact emergency services right away.
+      <p className="mx-auto mt-2.5 max-w-3xl text-center text-xs leading-4 text-ink-soft/80">
+        Grace can make mistakes and isn&apos;t a replacement for professional care.
+        <span className="hidden sm:inline"> If you&apos;re in immediate danger, contact emergency services.</span>
       </p>
     </div>
   );

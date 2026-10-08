@@ -18,14 +18,69 @@
   --color-outline: #ccc3d2;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
   height: 100%;
 }
 
+html {
+  background: #eff4ff;
+}
+
 body {
   @apply bg-surface font-sans text-ink antialiased;
+  margin: 0;
+  min-width: 320px;
+  overflow: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgb(110 77 161 / 0.22);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #d6baff;
+  color: #270057;
+}
+
+.app-shell {
+  background: #f8f9ff;
+}
+
+.grace-scrollbar {
+  scrollbar-color: rgb(110 77 161 / 0.25) transparent;
+  scrollbar-width: thin;
+}
+
+.grace-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.grace-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(110 77 161 / 0.22);
+  border-radius: 999px;
+}
+
+.grace-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .prose-grace p + p,
@@ -51,4 +106,17 @@ body {
 }
 .prose-grace a {
   text-decoration: underline;
+  text-decoration-color: rgb(110 77 161 / 0.45);
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
